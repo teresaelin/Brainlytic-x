@@ -1,0 +1,1546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Brainlytic</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Mono:ital,wght@0,300;0,400;1,300&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink: #0d0d0e;
+    --paper: #f5f0e8;
+    --cream: #ede8dc;
+    --rust: #b5451b;
+    --gold: #c4933a;
+    --muted: #7a7468;
+    --divider: #ccc5b5;
+    --deep: #1a1714;
+    --highlight: #e8dfc8;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── NOISE OVERLAY ── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+    opacity: 0.4;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 100;
+    background: rgba(245, 240, 232, 0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--divider);
+    padding: 0 4vw;
+    display: flex;
+    align-items: center;
+    height: 56px;
+    gap: 0;
+  }
+
+  .nav-logo {
+    font-family: 'Playfair Display', serif;
+    font-weight: 900;
+    font-size: 1.25rem;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    margin-right: auto;
+    cursor: pointer;
+    transition: color 0.2s;
+  }
+  .nav-logo span { color: var(--rust); }
+  .nav-logo:hover { color: var(--rust); }
+
+  .nav-links {
+    display: flex;
+    gap: 0;
+    list-style: none;
+  }
+
+  .nav-links li a {
+    display: block;
+    padding: 0 14px;
+    height: 56px;
+    line-height: 56px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--muted);
+    transition: color 0.2s, background 0.2s;
+    cursor: pointer;
+  }
+  .nav-links li a:hover,
+  .nav-links li a.active {
+    color: var(--rust);
+    background: var(--cream);
+  }
+
+  /* ── PAGES ── */
+  .page { display: none; min-height: 100vh; padding-top: 56px; }
+  .page.active { display: block; animation: fadeUp 0.5s ease both; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── HERO ── */
+  .hero {
+    position: relative;
+    min-height: calc(100vh - 56px);
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    overflow: hidden;
+  }
+
+  .hero-left {
+    padding: 10vh 6vw 8vh 8vw;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    position: relative;
+    z-index: 2;
+  }
+
+  .hero-eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--rust);
+    margin-bottom: 1.8rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .hero-eyebrow::before {
+    content: '';
+    display: block;
+    width: 32px;
+    height: 1px;
+    background: var(--rust);
+  }
+
+  .hero-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(3.2rem, 7vw, 6rem);
+    font-weight: 900;
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+    margin-bottom: 2rem;
+  }
+  .hero-title em {
+    font-style: italic;
+    color: var(--rust);
+  }
+
+  .hero-intro {
+    font-size: 1.25rem;
+    line-height: 1.7;
+    color: #3a3530;
+    max-width: 44ch;
+    margin-bottom: 3rem;
+    font-weight: 300;
+  }
+
+  .hero-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--paper);
+    background: var(--ink);
+    border: none;
+    padding: 14px 28px;
+    cursor: pointer;
+    transition: background 0.25s, transform 0.2s;
+    align-self: flex-start;
+  }
+  .hero-cta:hover { background: var(--rust); transform: translateX(4px); }
+  .hero-cta svg { transition: transform 0.2s; }
+  .hero-cta:hover svg { transform: translateX(4px); }
+
+  .hero-right {
+    position: relative;
+    overflow: hidden;
+    background: var(--deep);
+  }
+
+  /* Decorative brain SVG pattern */
+  .hero-visual {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+
+  .brain-rings {
+    position: relative;
+    width: 420px; height: 420px;
+  }
+  .ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid rgba(196,147,58,0.25);
+    top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    animation: pulse 6s ease-in-out infinite;
+  }
+  .ring:nth-child(1) { width: 420px; height: 420px; animation-delay: 0s; }
+  .ring:nth-child(2) { width: 320px; height: 320px; animation-delay: 1s; border-color: rgba(181,69,27,0.3); }
+  .ring:nth-child(3) { width: 220px; height: 220px; animation-delay: 2s; border-color: rgba(196,147,58,0.5); }
+  .ring:nth-child(4) { width: 120px; height: 120px; animation-delay: 3s; border-color: rgba(181,69,27,0.6); }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 0.4; transform: translate(-50%,-50%) scale(1); }
+    50% { opacity: 1; transform: translate(-50%,-50%) scale(1.03); }
+  }
+
+  .brain-center {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    width: 60px; height: 60px;
+    background: var(--rust);
+    border-radius: 50%;
+    opacity: 0.9;
+    box-shadow: 0 0 60px rgba(181,69,27,0.6);
+  }
+
+  .hero-overlay-text {
+    position: absolute;
+    bottom: 48px; left: 40px;
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-size: 0.9rem;
+    color: rgba(196,147,58,0.7);
+    letter-spacing: 0.05em;
+    line-height: 1.5;
+    max-width: 22ch;
+  }
+
+  /* ── FEATURED QUOTE ── */
+  .featured-quote-section {
+    background: var(--deep);
+    padding: 80px 8vw;
+    position: relative;
+    overflow: hidden;
+  }
+  .featured-quote-section::before {
+    content: '"';
+    position: absolute;
+    top: -20px; left: 6vw;
+    font-family: 'Playfair Display', serif;
+    font-size: 24rem;
+    color: rgba(196,147,58,0.06);
+    line-height: 1;
+    pointer-events: none;
+    select: none;
+  }
+
+  .fq-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 2rem;
+  }
+
+  .fq-text {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    font-size: clamp(1.6rem, 3vw, 2.4rem);
+    line-height: 1.45;
+    color: var(--paper);
+    max-width: 70ch;
+    margin-bottom: 1.5rem;
+  }
+
+  .fq-attr {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+  }
+
+  /* ── OVERVIEW GRID ── */
+  .overview-section {
+    padding: 80px 8vw;
+    background: var(--cream);
+  }
+
+  .section-heading {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--rust);
+    margin-bottom: 1.5rem;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .section-heading::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--divider);
+    max-width: 100px;
+  }
+
+  .overview-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+    margin-top: 3rem;
+  }
+
+  .overview-card {
+    background: var(--paper);
+    padding: 40px 36px;
+    position: relative;
+    transition: background 0.2s;
+    cursor: pointer;
+  }
+  .overview-card:hover { background: var(--highlight); }
+
+  .oc-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--rust);
+    letter-spacing: 0.1em;
+    margin-bottom: 1.2rem;
+  }
+  .oc-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 0.8rem;
+  }
+  .oc-body {
+    font-size: 0.95rem;
+    line-height: 1.75;
+    color: #4a4540;
+    font-weight: 300;
+  }
+
+  /* ── INNER PAGE LAYOUTS ── */
+  .inner-hero {
+    background: var(--deep);
+    padding: 80px 8vw 60px;
+    position: relative;
+    overflow: hidden;
+  }
+  .inner-hero::after {
+    content: '';
+    position: absolute;
+    bottom: -1px; left: 0; right: 0;
+    height: 60px;
+    background: var(--paper);
+    clip-path: polygon(0 100%, 100% 100%, 100% 0);
+  }
+
+  .inner-eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 1.2rem;
+  }
+
+  .inner-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.4rem, 5vw, 4rem);
+    font-weight: 900;
+    line-height: 1.05;
+    color: var(--paper);
+    letter-spacing: -0.02em;
+    margin-bottom: 1.2rem;
+  }
+  .inner-title em { color: var(--gold); font-style: italic; }
+
+  .inner-subtitle {
+    font-size: 1.1rem;
+    line-height: 1.7;
+    color: rgba(245,240,232,0.65);
+    max-width: 60ch;
+    font-weight: 300;
+  }
+
+  .page-body { padding: 60px 8vw 100px; }
+
+  /* ── CONCEPTS PAGE ── */
+  .theme-tabs {
+    display: flex;
+    gap: 2px;
+    flex-wrap: wrap;
+    margin-bottom: 3rem;
+  }
+
+  .theme-tab {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 8px 18px;
+    border: 1px solid var(--divider);
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .theme-tab:hover, .theme-tab.active {
+    background: var(--ink);
+    color: var(--paper);
+    border-color: var(--ink);
+  }
+
+  .concepts-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2px;
+  }
+
+  .concept-card {
+    background: var(--cream);
+    padding: 36px 32px;
+    border-left: 3px solid transparent;
+    transition: border-color 0.2s, background 0.2s;
+    cursor: pointer;
+  }
+  .concept-card:hover {
+    border-color: var(--rust);
+    background: var(--highlight);
+  }
+
+  .cc-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--rust);
+    margin-bottom: 0.8rem;
+  }
+  .cc-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-bottom: 0.7rem;
+  }
+  .cc-body {
+    font-size: 0.92rem;
+    line-height: 1.8;
+    color: #4a4540;
+    font-weight: 300;
+  }
+
+  /* ── Q&A PAGE ── */
+  .qa-filter {
+    display: flex;
+    gap: 2px;
+    flex-wrap: wrap;
+    margin-bottom: 3rem;
+  }
+
+  .qa-item {
+    border-bottom: 1px solid var(--divider);
+    overflow: hidden;
+  }
+
+  .qa-question {
+    padding: 24px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    cursor: pointer;
+    gap: 20px;
+    transition: color 0.2s;
+  }
+  .qa-question:hover { color: var(--rust); }
+
+  .qa-q-text {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.15rem;
+    font-weight: 600;
+    line-height: 1.4;
+  }
+
+  .qa-toggle {
+    font-size: 1.4rem;
+    color: var(--rust);
+    flex-shrink: 0;
+    margin-top: 2px;
+    transition: transform 0.3s;
+    font-family: 'DM Mono', monospace;
+    font-weight: 300;
+  }
+  .qa-item.open .qa-toggle { transform: rotate(45deg); }
+
+  .qa-answer {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease, padding 0.3s;
+  }
+  .qa-item.open .qa-answer { max-height: 500px; padding-bottom: 28px; }
+
+  .qa-a-text {
+    font-size: 1rem;
+    line-height: 1.85;
+    color: #4a4540;
+    font-weight: 300;
+    max-width: 72ch;
+  }
+
+  /* ── ESSAYS PAGE ── */
+  .essays-list { display: flex; flex-direction: column; gap: 2px; }
+
+  .essay-card {
+    background: var(--cream);
+    padding: 40px;
+    display: grid;
+    grid-template-columns: 100px 1fr auto;
+    gap: 32px;
+    align-items: start;
+    transition: background 0.2s;
+    cursor: pointer;
+  }
+  .essay-card:hover { background: var(--highlight); }
+
+  .essay-date {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 0.08em;
+    line-height: 1.5;
+    padding-top: 4px;
+  }
+
+  .essay-content {}
+  .essay-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.58rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--rust);
+    margin-bottom: 0.6rem;
+  }
+  .essay-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 0.6rem;
+    line-height: 1.25;
+  }
+  .essay-excerpt {
+    font-size: 0.92rem;
+    line-height: 1.8;
+    color: #4a4540;
+    font-weight: 300;
+  }
+
+  .essay-arrow {
+    font-size: 1.2rem;
+    color: var(--rust);
+    padding-top: 4px;
+    transition: transform 0.2s;
+  }
+  .essay-card:hover .essay-arrow { transform: translateX(6px); }
+
+  /* ── EXPERIMENTS PAGE ── */
+  .experiment-card {
+    background: var(--cream);
+    padding: 48px 40px;
+    margin-bottom: 2px;
+  }
+
+  .exp-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .exp-meta {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--rust);
+    margin-bottom: 0.5rem;
+  }
+
+  .exp-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.7rem;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  .exp-status {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    border: 1px solid;
+    flex-shrink: 0;
+  }
+  .exp-status.complete { color: var(--rust); border-color: var(--rust); }
+  .exp-status.ongoing { color: var(--gold); border-color: var(--gold); }
+
+  .exp-sections {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 2px;
+    margin-top: 2rem;
+  }
+
+  .exp-section {
+    background: var(--paper);
+    padding: 20px 18px;
+  }
+
+  .exp-s-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--rust);
+    margin-bottom: 0.6rem;
+  }
+
+  .exp-s-text {
+    font-size: 0.88rem;
+    line-height: 1.75;
+    color: #4a4540;
+    font-weight: 300;
+  }
+
+  /* ── RECENT PAGE ── */
+  .recent-hero-text {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.15rem, 2vw, 1.5rem);
+    font-style: italic;
+    line-height: 1.7;
+    color: var(--paper);
+    max-width: 56ch;
+    margin-top: 1rem;
+  }
+
+  .recent-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 2px;
+  }
+
+  .recent-main {
+    background: var(--cream);
+    padding: 48px 40px;
+    border-left: 4px solid var(--rust);
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .recent-main:hover { background: var(--highlight); }
+
+  .recent-side { display: flex; flex-direction: column; gap: 2px; }
+
+  .recent-side-card {
+    background: var(--cream);
+    padding: 28px 28px;
+    flex: 1;
+    cursor: pointer;
+    transition: background 0.2s;
+    border-left: 2px solid transparent;
+    transition: all 0.2s;
+  }
+  .recent-side-card:hover { background: var(--highlight); border-left-color: var(--gold); }
+
+  .recent-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.6rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--rust);
+    margin-bottom: 0.7rem;
+  }
+
+  .recent-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.8rem;
+    line-height: 1.25;
+  }
+
+  .recent-side .recent-title { font-size: 1.1rem; }
+
+  .recent-body {
+    font-size: 0.95rem;
+    line-height: 1.85;
+    color: #4a4540;
+    font-weight: 300;
+  }
+
+  /* ── CONTACT PAGE ── */
+  .contact-wrap {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: start;
+  }
+
+  .contact-left {}
+
+  .contact-intro-heading {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 4vw, 3.2rem);
+    font-weight: 700;
+    line-height: 1.1;
+    margin-bottom: 1.5rem;
+    letter-spacing: -0.02em;
+  }
+  .contact-intro-heading em { font-style: italic; color: var(--rust); }
+
+  .contact-intro-body {
+    font-size: 1.05rem;
+    line-height: 1.85;
+    color: #4a4540;
+    font-weight: 300;
+    max-width: 44ch;
+  }
+
+  .contact-right {}
+
+  .platform-card {
+    background: var(--cream);
+    padding: 36px 32px;
+    margin-bottom: 2px;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+  }
+  .platform-card:hover { background: var(--deep); transform: translateX(6px); }
+  .platform-card:hover .pc-name,
+  .platform-card:hover .pc-desc { color: var(--paper); }
+  .platform-card:hover .pc-icon { background: var(--rust); }
+
+  .pc-icon {
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    background: var(--paper);
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.2s;
+    font-size: 1.4rem;
+  }
+
+  .pc-info { flex: 1; }
+  .pc-platform {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.58rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 3px;
+    transition: color 0.2s;
+  }
+  .pc-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+    transition: color 0.2s;
+  }
+  .pc-desc {
+    font-size: 0.88rem;
+    color: #5a5550;
+    font-weight: 300;
+    transition: color 0.2s;
+  }
+
+  .pc-arrow {
+    color: var(--rust);
+    font-size: 1.1rem;
+    transition: transform 0.2s;
+  }
+  .platform-card:hover .pc-arrow { transform: translateX(4px); color: var(--gold); }
+
+  /* ── FOOTER ── */
+  footer {
+    background: var(--deep);
+    padding: 40px 8vw;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-top: 1px solid rgba(245,240,232,0.08);
+  }
+
+  .footer-logo {
+    font-family: 'Playfair Display', serif;
+    font-weight: 900;
+    font-size: 1.1rem;
+    color: var(--paper);
+    letter-spacing: -0.02em;
+  }
+  .footer-logo span { color: var(--rust); }
+
+  .footer-mono {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.14em;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 900px) {
+    .hero { grid-template-columns: 1fr; }
+    .hero-right { min-height: 300px; }
+    .overview-grid { grid-template-columns: 1fr; }
+    .concepts-grid { grid-template-columns: 1fr; }
+    .essay-card { grid-template-columns: 1fr; gap: 12px; }
+    .essay-date { display: none; }
+    .exp-sections { grid-template-columns: 1fr 1fr; }
+    .recent-grid { grid-template-columns: 1fr; }
+    .contact-wrap { grid-template-columns: 1fr; gap: 40px; }
+    .nav-links li a { padding: 0 8px; font-size: 0.62rem; }
+  }
+
+  @media (max-width: 600px) {
+    .exp-sections { grid-template-columns: 1fr; }
+    .nav-links li a { padding: 0 5px; font-size: 0.58rem; letter-spacing: 0.06em; }
+  }
+
+  /* DECORATIVE LINES */
+  .deco-line {
+    height: 1px;
+    background: var(--divider);
+    margin: 60px 0;
+  }
+
+  .deco-line-accent {
+    height: 3px;
+    width: 60px;
+    background: var(--rust);
+    margin-bottom: 1.5rem;
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo" onclick="showPage('home')">Brain<span>lytic</span></div>
+  <ul class="nav-links">
+    <li><a href="#" class="active" onclick="showPage('home',this)">Home</a></li>
+    <li><a href="#" onclick="showPage('concepts',this)">Concepts</a></li>
+    <li><a href="#" onclick="showPage('qa',this)">Q&amp;A</a></li>
+    <li><a href="#" onclick="showPage('essays',this)">Essays</a></li>
+    <li><a href="#" onclick="showPage('experiments',this)">Experiments</a></li>
+    <li><a href="#" onclick="showPage('recent',this)">Recent</a></li>
+    <li><a href="#" onclick="showPage('contact',this)">Contact</a></li>
+  </ul>
+</nav>
+
+<!-- ══════════════════════════════════════════
+     HOME PAGE
+════════════════════════════════════════════ -->
+<div id="page-home" class="page active">
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-left">
+      <div class="hero-eyebrow">Neuropsychology · Science · Mind</div>
+      <h1 class="hero-title">Decoding<br/>the <em>thinking</em><br/>brain.</h1>
+      <p class="hero-intro">Brainlytic is an independent platform exploring neuropsychology — from the cellular to the cultural. Rigorous ideas, made accessible.</p>
+      <button class="hero-cta" onclick="showPage('concepts', document.querySelector('.nav-links li:nth-child(2) a'))">
+        Explore Concepts
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+
+    <div class="hero-right">
+      <div class="hero-visual">
+        <div class="brain-rings">
+          <div class="ring"></div>
+          <div class="ring"></div>
+          <div class="ring"></div>
+          <div class="ring"></div>
+          <div class="brain-center"></div>
+        </div>
+      </div>
+      <div class="hero-overlay-text">
+        "The brain is wider<br/>than the sky."<br/>— Emily Dickinson
+      </div>
+    </div>
+  </section>
+
+  <!-- Featured Quote -->
+  <section class="featured-quote-section">
+    <div class="fq-label">Featured Quote</div>
+    <p class="fq-text">"We are not our neurons — but we cannot escape them. Understanding the brain is understanding the preconditions of everything we are."</p>
+    <p class="fq-attr">— Brainlytic, Opening Essay</p>
+  </section>
+
+  <!-- Overview -->
+  <section class="overview-section">
+    <div class="section-heading">What Brainlytic Is About</div>
+    <div class="overview-grid">
+      <div class="overview-card" onclick="showPage('concepts', document.querySelector('.nav-links li:nth-child(2) a'))">
+        <div class="oc-num">01</div>
+        <div class="oc-title">Core Concepts</div>
+        <p class="oc-body">A structured guide to neuropsychology's most important ideas — from memory systems to brain regions and clinical disorders, explained with clarity and depth.</p>
+      </div>
+      <div class="overview-card" onclick="showPage('essays', document.querySelector('.nav-links li:nth-child(4) a'))">
+        <div class="oc-num">02</div>
+        <div class="oc-title">Original Essays</div>
+        <p class="oc-body">Personal reflections and academic writing on psychology, neuroscience, mental health, and the intersections of mind and society.</p>
+      </div>
+      <div class="overview-card" onclick="showPage('experiments', document.querySelector('.nav-links li:nth-child(5) a'))">
+        <div class="oc-num">03</div>
+        <div class="oc-title">Self-Run Experiments</div>
+        <p class="oc-body">Documented experiments with full methodology — aim, hypothesis, results, and conclusion — making the site feel genuinely research-driven.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="footer-logo">Brain<span>lytic</span></div>
+    <div class="footer-mono">Independent · Neuropsychology · Research</div>
+  </footer>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     CONCEPTS PAGE
+════════════════════════════════════════════ -->
+<div id="page-concepts" class="page">
+  <div class="inner-hero">
+    <div class="inner-eyebrow">Knowledge Base</div>
+    <h1 class="inner-title">Core <em>Concepts</em></h1>
+    <p class="inner-subtitle">Key neuropsychology ideas, organized by theme. Each entry is written to be clear, accurate, and thought-provoking.</p>
+  </div>
+
+  <div class="page-body">
+    <div class="theme-tabs">
+      <button class="theme-tab active" onclick="filterConcepts('all', this)">All</button>
+      <button class="theme-tab" onclick="filterConcepts('memory', this)">Memory</button>
+      <button class="theme-tab" onclick="filterConcepts('cognition', this)">Cognition</button>
+      <button class="theme-tab" onclick="filterConcepts('emotion', this)">Emotion</button>
+      <button class="theme-tab" onclick="filterConcepts('behaviour', this)">Behaviour</button>
+      <button class="theme-tab" onclick="filterConcepts('regions', this)">Brain Regions</button>
+      <button class="theme-tab" onclick="filterConcepts('disorders', this)">Disorders</button>
+    </div>
+
+    <div class="concepts-grid" id="concepts-grid">
+
+      <div class="concept-card" data-theme="memory">
+        <div class="cc-tag">Memory</div>
+        <div class="cc-title">Long-Term Potentiation (LTP)</div>
+        <p class="cc-body">The cellular mechanism thought to underlie learning and memory. When two neurons fire together repeatedly, the synapse between them strengthens — a biological expression of Hebb's rule: "neurons that fire together, wire together."</p>
+      </div>
+
+      <div class="concept-card" data-theme="memory">
+        <div class="cc-tag">Memory</div>
+        <div class="cc-title">Working Memory</div>
+        <p class="cc-body">A short-term cognitive system that temporarily holds and manipulates information. Baddeley's model describes a central executive, phonological loop, visuospatial sketchpad, and episodic buffer — each serving a distinct role in active thought.</p>
+      </div>
+
+      <div class="concept-card" data-theme="cognition">
+        <div class="cc-tag">Cognition</div>
+        <div class="cc-title">Cognitive Load Theory</div>
+        <p class="cc-body">Sweller's framework proposes that learning is constrained by the limits of working memory. Intrinsic, extraneous, and germane loads shape how efficiently new schemas are built — with profound implications for education and interface design.</p>
+      </div>
+
+      <div class="concept-card" data-theme="cognition">
+        <div class="cc-tag">Cognition</div>
+        <div class="cc-title">Executive Function</div>
+        <p class="cc-body">An umbrella term for top-down regulatory processes: planning, cognitive flexibility, inhibitory control, and working memory updating. Largely governed by the prefrontal cortex, these functions distinguish deliberate thought from reactive behaviour.</p>
+      </div>
+
+      <div class="concept-card" data-theme="emotion">
+        <div class="cc-tag">Emotion</div>
+        <div class="cc-title">The Amygdala's Role in Fear</div>
+        <p class="cc-body">The amygdala acts as a threat-detection hub, initiating the fear response before conscious awareness. LeDoux's "low road" describes a fast, subcortical pathway to fear — bypassing the cortex entirely — explaining why fear can feel involuntary.</p>
+      </div>
+
+      <div class="concept-card" data-theme="emotion">
+        <div class="cc-tag">Emotion</div>
+        <div class="cc-title">Emotional Regulation</div>
+        <p class="cc-body">The ability to modulate emotional experience and expression. Strategies include cognitive reappraisal (reframing meaning) and suppression (hiding response), with distinct neural signatures and very different effects on psychological wellbeing.</p>
+      </div>
+
+      <div class="concept-card" data-theme="behaviour">
+        <div class="cc-tag">Behaviour</div>
+        <div class="cc-title">Operant Conditioning</div>
+        <p class="cc-body">Skinner's model of how consequences shape behaviour. Reinforcement increases the likelihood of a behaviour; punishment decreases it. Variable-ratio reinforcement schedules — like social media likes — produce the most resistant-to-extinction behaviour.</p>
+      </div>
+
+      <div class="concept-card" data-theme="behaviour">
+        <div class="cc-tag">Behaviour</div>
+        <div class="cc-title">The Default Mode Network</div>
+        <p class="cc-body">Active during rest and self-referential thought — daydreaming, mental time travel, and imagining others' perspectives. Disruption to this network is implicated in depression, anxiety, schizophrenia, and even creativity research.</p>
+      </div>
+
+      <div class="concept-card" data-theme="regions">
+        <div class="cc-tag">Brain Regions</div>
+        <div class="cc-title">The Prefrontal Cortex</div>
+        <p class="cc-body">The seat of the "rational self." The PFC is responsible for planning, decision-making, social behaviour, and personality. Its prolonged maturation — not fully developed until the mid-20s — partially explains adolescent risk-taking.</p>
+      </div>
+
+      <div class="concept-card" data-theme="regions">
+        <div class="cc-tag">Brain Regions</div>
+        <div class="cc-title">The Hippocampus</div>
+        <p class="cc-body">Critical for forming new declarative memories and spatial navigation. H.M.'s case — a patient who lost both hippocampi — revealed the distinction between explicit and implicit memory systems, reshaping the field entirely.</p>
+      </div>
+
+      <div class="concept-card" data-theme="disorders">
+        <div class="cc-tag">Disorders</div>
+        <div class="cc-title">Depression & Neuroplasticity</div>
+        <p class="cc-body">Major depressive disorder is associated with reduced hippocampal volume and impaired neurogenesis. Antidepressants may work partly by restoring neuroplasticity — a finding that reframes depression as a disorder of the brain's capacity to adapt.</p>
+      </div>
+
+      <div class="concept-card" data-theme="disorders">
+        <div class="cc-tag">Disorders</div>
+        <div class="cc-title">ADHD & Dopaminergic Pathways</div>
+        <p class="cc-body">ADHD involves dysregulation of dopamine in prefrontal circuits. The condition is better understood not as a deficit of attention, but as difficulty with selective attention — particularly when a task lacks immediate reward or novelty.</p>
+      </div>
+
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-logo">Brain<span>lytic</span></div>
+    <div class="footer-mono">Concepts · Neuropsychology</div>
+  </footer>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     Q&A PAGE
+════════════════════════════════════════════ -->
+<div id="page-qa" class="page">
+  <div class="inner-hero">
+    <div class="inner-eyebrow">Questions & Answers</div>
+    <h1 class="inner-title"><em>Answers</em> to the big questions</h1>
+    <p class="inner-subtitle">Common myths, student questions, and deeper explanations — grouped by topic and answered with care.</p>
+  </div>
+
+  <div class="page-body">
+    <div class="qa-filter theme-tabs">
+      <button class="theme-tab active" onclick="filterQA('all',this)">All</button>
+      <button class="theme-tab" onclick="filterQA('myths',this)">Myths</button>
+      <button class="theme-tab" onclick="filterQA('memory',this)">Memory</button>
+      <button class="theme-tab" onclick="filterQA('brain',this)">Brain & Biology</button>
+      <button class="theme-tab" onclick="filterQA('mental-health',this)">Mental Health</button>
+    </div>
+
+    <div id="qa-list">
+
+      <div class="qa-item" data-topic="myths">
+        <div class="qa-question" onclick="toggleQA(this.parentElement)">
+          <div class="qa-q-text">Do we really only use 10% of our brains?</div>
+          <div class="qa-toggle">+</div>
+        </div>
+        <div class="qa-answer">
+          <p class="qa-a-text">No — this is one of the most persistent myths in popular psychology. Brain imaging studies clearly show that we use virtually all parts of the brain, and that most of the brain is active almost all the time. The myth likely arose from misinterpretations of early neuroscience findings. In reality, the brain is metabolically expensive: it consumes roughly 20% of the body's energy despite being only 2% of its mass.</p>
+        </div>
+      </div>
+
+      <div class="qa-item" data-topic="myths">
+        <div class="qa-question" onclick="toggleQA(this.parentElement)">
+          <div class="qa-q-text">Are people truly "left-brained" or "right-brained"?</div>
+          <div class="qa-toggle">+</div>
+        </div>
+        <div class="qa-answer">
+          <p class="qa-a-text">Not in the way popular culture suggests. While some functions are lateralised — language is predominantly left-hemisphere in most people — a large-scale neuroimaging study (Nielsen et al., 2013) found no evidence that individuals preferentially use one hemisphere over the other. Personality traits like creativity or logic cannot be meaningfully attributed to a single hemisphere.</p>
+        </div>
+      </div>
+
+      <div class="qa-item" data-topic="memory">
+        <div class="qa-question" onclick="toggleQA(this.parentElement)">
+          <div class="qa-q-text">Why do we forget things so quickly?</div>
+          <div class="qa-toggle">+</div>
+        </div>
+        <div class="qa-answer">
+          <p class="qa-a-text">Forgetting is not a failure — it's an adaptive feature. Ebbinghaus's "forgetting curve" showed that memory decays rapidly without reinforcement, but spaced repetition dramatically slows this curve. The brain prioritises information that is emotionally significant, frequently accessed, or associated with strong contextual cues. Much of what we "forget" was never encoded into long-term memory in the first place.</p>
+        </div>
+      </div>
+
+      <div class="qa-item" data-topic="memory">
+        <div class="qa-question" onclick="toggleQA(this.parentElement)">
+          <div class="qa-q-text">Can memories ever be truly false?</div>
+          <div class="qa-toggle">+</div>
+        </div>
+        <div class="qa-answer">
+          <p class="qa-a-text">Yes. Elizabeth Loftus's decades of research demonstrated that memory is reconstructive, not reproductive — it is rebuilt each time we recall it, making it susceptible to suggestion, distortion, and fabrication. In experiments, participants were reliably implanted with detailed false memories of events that never occurred. This has critical implications for eyewitness testimony and therapeutic practice.</p>
+        </div>
+      </div>
+
+      <div class="qa-item" data-topic="brain">
+        <div class="qa-question" onclick="toggleQA(this.parentElement)">
+          <div class="qa-q-text">Does the brain stop developing at age 18?</div>
+          <div class="qa-toggle">+</div>
+        </div>
+        <div class="qa-answer">
+          <p class="qa-a-text">No. The prefrontal cortex — responsible for impulse control, planning, and judgement — continues maturing into the mid-20s. Myelination (the insulation of neural pathways that speeds processing) continues well beyond adolescence. Some research suggests that certain social-cognitive capacities continue developing into the 30s.</p>
+        </div>
+      </div>
+
+      <div class="qa-item" data-topic="brain">
+        <div class="qa-question" onclick="toggleQA(this.parentElement)">
+          <div class="qa-q-text">What is neuroplasticity, and is it limitless?</div>
+          <div class="qa-toggle">+</div>
+        </div>
+        <div class="qa-answer">
+          <p class="qa-a-text">Neuroplasticity is the brain's ability to reorganise its structure and function in response to experience. It is remarkable but not limitless. Plasticity is highest in early childhood — a sensitive period for language, sensory calibration, and social development. In adulthood, the brain retains plasticity through learning and recovery from injury, but change requires sustained effort and is constrained by existing architecture.</p>
+        </div>
+      </div>
+
+      <div class="qa-item" data-topic="mental-health">
+        <div class="qa-question" onclick="toggleQA(this.parentElement)">
+          <div class="qa-q-text">Is mental illness caused by a "chemical imbalance"?</div>
+          <div class="qa-toggle">+</div>
+        </div>
+        <div class="qa-answer">
+          <p class="qa-a-text">The "chemical imbalance" theory — particularly the serotonin-deficiency model of depression — has been largely abandoned by researchers. Mental illness is now understood as arising from complex interactions between genetics, neurodevelopment, stress, trauma, and environment. The simplicity of the chemical imbalance narrative was useful for reducing stigma, but it was always an oversimplification that does not reflect current neuroscience.</p>
+        </div>
+      </div>
+
+      <div class="qa-item" data-topic="mental-health">
+        <div class="qa-question" onclick="toggleQA(this.parentElement)">
+          <div class="qa-q-text">Does talking about problems actually help, neurologically?</div>
+          <div class="qa-toggle">+</div>
+        </div>
+        <div class="qa-answer">
+          <p class="qa-a-text">Yes, and the evidence is compelling. Labelling emotions — what researchers call "affect labelling" — reduces amygdala activation, essentially dampening the emotional alarm system. Psychotherapy has been shown to produce measurable changes in brain activity patterns comparable to pharmacological treatment in some conditions. Narrative and language appear to give the prefrontal cortex a handle on limbic arousal.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-logo">Brain<span>lytic</span></div>
+    <div class="footer-mono">Q&amp;A · Questions · Neuropsychology</div>
+  </footer>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     ESSAYS PAGE
+════════════════════════════════════════════ -->
+<div id="page-essays" class="page">
+  <div class="inner-hero">
+    <div class="inner-eyebrow">Personal Archive</div>
+    <h1 class="inner-title">The <em>Essays</em></h1>
+    <p class="inner-subtitle">Personal writing on psychology, neuroscience, mental health, and the intersections of mind with society and culture.</p>
+  </div>
+
+  <div class="page-body">
+    <div class="theme-tabs" style="margin-bottom:3rem;">
+      <button class="theme-tab active" onclick="filterEssays('all',this)">All</button>
+      <button class="theme-tab" onclick="filterEssays('psychology',this)">Psychology</button>
+      <button class="theme-tab" onclick="filterEssays('neuroscience',this)">Neuroscience</button>
+      <button class="theme-tab" onclick="filterEssays('mental-health',this)">Mental Health</button>
+      <button class="theme-tab" onclick="filterEssays('society',this)">Society</button>
+      <button class="theme-tab" onclick="filterEssays('research',this)">Research</button>
+    </div>
+
+    <div class="essays-list" id="essays-list">
+
+      <div class="essay-card" data-tag="neuroscience">
+        <div class="essay-date">14 May<br/>2025</div>
+        <div class="essay-content">
+          <div class="essay-tag">Neuroscience</div>
+          <div class="essay-title">The Reconstructive Brain: Why Memory Is Never a Replay</div>
+          <p class="essay-excerpt">Every act of remembering is also an act of creation. Drawing on Loftus, Bartlett, and recent fMRI evidence, this essay argues that memory's fallibility is not a design flaw but its defining feature.</p>
+        </div>
+        <div class="essay-arrow">→</div>
+      </div>
+
+      <div class="essay-card" data-tag="society">
+        <div class="essay-date">02 Apr<br/>2025</div>
+        <div class="essay-content">
+          <div class="essay-tag">Society</div>
+          <div class="essay-title">Dopamine Culture: What the Attention Economy Does to the Brain</div>
+          <p class="essay-excerpt">Social media platforms are not neutral spaces — they are environments engineered to exploit reward circuitry. This essay examines the neuropsychology of compulsive scrolling and what it reveals about modern life.</p>
+        </div>
+        <div class="essay-arrow">→</div>
+      </div>
+
+      <div class="essay-card" data-tag="mental-health">
+        <div class="essay-date">18 Mar<br/>2025</div>
+        <div class="essay-content">
+          <div class="essay-tag">Mental Health</div>
+          <div class="essay-title">On Numbness: The Neuroscience of Emotional Blunting</div>
+          <p class="essay-excerpt">Depression is not always experienced as sadness. For many, it is absence — a flattening of affect that disconnects people from both suffering and joy. What does the neuroscience tell us about why this happens?</p>
+        </div>
+        <div class="essay-arrow">→</div>
+      </div>
+
+      <div class="essay-card" data-tag="psychology">
+        <div class="essay-date">06 Feb<br/>2025</div>
+        <div class="essay-content">
+          <div class="essay-tag">Psychology</div>
+          <div class="essay-title">Ego Depletion Reconsidered: Willpower as Resource vs. Belief</div>
+          <p class="essay-excerpt">The "glucose model" of self-control has struggled to replicate. A new picture is emerging: willpower may be as much about what we believe as what we have. A critical look at a contentious debate.</p>
+        </div>
+        <div class="essay-arrow">→</div>
+      </div>
+
+      <div class="essay-card" data-tag="research">
+        <div class="essay-date">12 Jan<br/>2025</div>
+        <div class="essay-content">
+          <div class="essay-tag">Research</div>
+          <div class="essay-title">The Replication Crisis and What It Means for Everything You Believe About Psychology</div>
+          <p class="essay-excerpt">When landmark studies fail to replicate, what collapses with them? This essay traces the crisis to its roots in incentive structures, publication bias, and the gap between effect sizes and popular claims.</p>
+        </div>
+        <div class="essay-arrow">→</div>
+      </div>
+
+      <div class="essay-card" data-tag="neuroscience">
+        <div class="essay-date">28 Nov<br/>2024</div>
+        <div class="essay-content">
+          <div class="essay-tag">Neuroscience</div>
+          <div class="essay-title">Sleep as Cognitive Maintenance: The Brain That Cleans Itself</div>
+          <p class="essay-excerpt">The glymphatic system — discovered in 2012 — flushes metabolic waste from the brain during sleep. This piece explores why sleep deprivation may be one of the most under-acknowledged risks to long-term cognitive health.</p>
+        </div>
+        <div class="essay-arrow">→</div>
+      </div>
+
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-logo">Brain<span>lytic</span></div>
+    <div class="footer-mono">Essays · Writing · Psychology</div>
+  </footer>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     EXPERIMENTS PAGE
+════════════════════════════════════════════ -->
+<div id="page-experiments" class="page">
+  <div class="inner-hero">
+    <div class="inner-eyebrow">Original Research</div>
+    <h1 class="inner-title">Self-Run <em>Experiments</em></h1>
+    <p class="inner-subtitle">Conducted, documented, and interpreted independently. Each study follows a structured format — aim, hypothesis, method, results, and conclusion.</p>
+  </div>
+
+  <div class="page-body">
+
+    <div class="experiment-card">
+      <div class="exp-header">
+        <div>
+          <div class="exp-meta">Experiment 001 · Cognitive Psychology</div>
+          <div class="exp-title">The Stroop Effect Under Emotional Arousal</div>
+        </div>
+        <div class="exp-status complete">Complete</div>
+      </div>
+      <p style="font-size:0.95rem;line-height:1.8;color:#4a4540;font-weight:300;max-width:72ch;">Does emotional arousal amplify or diminish the Stroop interference effect? This experiment tests whether exposure to affective stimuli prior to a Stroop task modifies response times and error rates.</p>
+      <div class="exp-sections">
+        <div class="exp-section">
+          <div class="exp-s-label">Aim</div>
+          <p class="exp-s-text">To assess whether induced emotional states alter Stroop task interference compared to a neutral baseline.</p>
+        </div>
+        <div class="exp-section">
+          <div class="exp-s-label">Hypothesis</div>
+          <p class="exp-s-text">Negative emotional arousal will increase Stroop interference (slower RT, more errors) by increasing attentional narrowing.</p>
+        </div>
+        <div class="exp-section">
+          <div class="exp-s-label">Method</div>
+          <p class="exp-s-text">N=24 self-selected participants; within-subjects design; IAPS images used for arousal induction; computerised Stroop task.</p>
+        </div>
+        <div class="exp-section">
+          <div class="exp-s-label">Results</div>
+          <p class="exp-s-text">Mean RT increased by 11% in the negative-arousal condition. Error rate rose from 4.2% to 9.8%. Effect size: d=0.64.</p>
+        </div>
+        <div class="exp-section">
+          <div class="exp-s-label">Conclusion</div>
+          <p class="exp-s-text">Partial support for the hypothesis. Results are consistent with attentional narrowing models, though confounds remain.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="experiment-card">
+      <div class="exp-header">
+        <div>
+          <div class="exp-meta">Experiment 002 · Memory</div>
+          <div class="exp-title">Spacing Effects in Self-Study: Does the Brain Know Best?</div>
+        </div>
+        <div class="exp-status complete">Complete</div>
+      </div>
+      <p style="font-size:0.95rem;line-height:1.8;color:#4a4540;font-weight:300;max-width:72ch;">A personal longitudinal study testing whether self-administered spaced repetition outperforms massed practice on retention of neuropsychology terminology over a six-week period.</p>
+      <div class="exp-sections">
+        <div class="exp-section">
+          <div class="exp-s-label">Aim</div>
+          <p class="exp-s-text">To replicate the spacing effect in a naturalistic personal learning context using vocabulary from a neuropsychology textbook.</p>
+        </div>
+        <div class="exp-section">
+          <div class="exp-s-label">Hypothesis</div>
+          <p class="exp-s-text">Spaced repetition will produce significantly higher retention at 6-week test compared to equivalent massed study time.</p>
+        </div>
+        <div class="exp-section">
+          <div class="exp-s-label">Method</div>
+          <p class="exp-s-text">Single-subject design; 80 terms; half studied via Anki (SRS), half via blocked study sessions. Blind testing at intervals.</p>
+        </div>
+        <div class="exp-section">
+          <div class="exp-s-label">Results</div>
+          <p class="exp-s-text">SRS condition: 78% retention at 6 weeks. Massed condition: 41% retention. Difference consistent across test intervals.</p>
+        </div>
+        <div class="exp-section">
+          <div class="exp-s-label">Conclusion</div>
+          <p class="exp-s-text">Strong replication of the spacing effect. Findings motivate broader adoption of SRS for academic study in memory-heavy fields.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="experiment-card">
+      <div class="exp-header">
+        <div>
+          <div class="exp-meta">Experiment 003 · Attention</div>
+          <div class="exp-title">Phone Proximity and Cognitive Capacity: A Desk Study</div>
+        </div>
+        <div class="exp-status ongoing">Ongoing</div>
+      </div>
+      <p style="font-size:0.95rem;line-height:1.8;color:#4a4540;font-weight:300;max-width:72ch;">Inspired by Ward et al. (2017), this experiment investigates whether the mere presence of a smartphone on a desk reduces available working memory capacity, even when the phone is silent and face-down.</p>
+      <div class="exp-sections">
+        <div class="exp-section">
+          <div class="exp-s-label">Aim</div>
+          <p class="exp-s-text">To test the "brain drain" hypothesis — that smartphone salience consumes attentional resources even without active use.</p>
+        </div>
+        <div class="exp-section">
+          <div class="exp-s-label">Hypothesis</div>
+          <p class="exp-s-text">Participants with phones visible on desk will perform worse on working memory tasks than those with phones absent.</p>
+        </div>
+        <div class="exp-section">
+          <div class="exp-s-label">Method</div>
+          <p class="exp-s-text">N=30; between-subjects; three conditions: phone on desk, phone in bag, phone in another room. Digit span and N-back tasks.</p>
+        </div>
+        <div class="exp-section">
+          <div class="exp-s-label">Results</div>
+          <p class="exp-s-text">Data collection ongoing (n=18 so far). Preliminary results show a trend in predicted direction but significance not yet reached.</p>
+        </div>
+        <div class="exp-section">
+          <div class="exp-s-label">Conclusion</div>
+          <p class="exp-s-text">Pending completion. Expected Q3 2025. Interim findings reported in an accompanying essay.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>
+    <div class="footer-logo">Brain<span>lytic</span></div>
+    <div class="footer-mono">Experiments · Research · Method</div>
+  </footer>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     RECENT PAGE
+════════════════════════════════════════════ -->
+<div id="page-recent" class="page">
+  <div class="inner-hero" style="padding-bottom:80px;">
+    <div class="inner-eyebrow">Modern Relevance</div>
+    <h1 class="inner-title">Neuropsychology<br/>in the <em>Now</em></h1>
+    <p class="inner-subtitle">Connecting the field to current issues — mental health crises, social media, technology, education, and global events. Reflective, critical, and socially engaged.</p>
+  </div>
+
+  <div class="page-body">
+    <div class="recent-grid">
+
+      <div class="recent-main">
+        <div class="recent-label">Featured · Mental Health</div>
+        <div class="recent-title">The Loneliness Epidemic Is Also a Brain Epidemic</div>
+        <p class="recent-body">Chronic loneliness does not merely feel painful — it physically reshapes the brain. Elevated cortisol, reduced hippocampal volume, hyperactive threat-detection: the neuroscience of social isolation maps onto a public health crisis that receives nowhere near enough structural attention. As rates of loneliness reach historic highs across age groups, we should ask whether our built environments, digital habits, and institutional structures are neurologically viable.</p>
+        <br/>
+        <p class="recent-body">This piece argues that loneliness must be treated not as a personal failure but as a systems-level failure — one with measurable consequences for cognitive decline, immune function, and mortality risk.</p>
+      </div>
+
+      <div class="recent-side">
+
+        <div class="recent-side-card">
+          <div class="recent-label">Technology · Cognition</div>
+          <div class="recent-title">Is AI Making Us Less Mentally Flexible?</div>
+          <p class="recent-body" style="font-size:0.88rem;line-height:1.8;color:#4a4540;font-weight:300;">Offloading cognitive tasks to AI tools may save time — but it may also atrophy the processes that make us adaptive thinkers. A look at cognitive outsourcing through a neuropsychology lens.</p>
+        </div>
+
+        <div class="recent-side-card">
+          <div class="recent-label">Education · Development</div>
+          <div class="recent-title">What Schools Still Get Wrong About the Adolescent Brain</div>
+          <p class="recent-body" style="font-size:0.88rem;line-height:1.8;color:#4a4540;font-weight:300;">Decades of neurodevelopmental research point clearly toward later school start times, reduced performance anxiety, and more social learning. Why does educational policy lag so far behind the science?</p>
+        </div>
+
+        <div class="recent-side-card">
+          <div class="recent-label">Society · Behaviour</div>
+          <div class="recent-title">Moral Injury in the Post-Pandemic World</div>
+          <p class="recent-body" style="font-size:0.88rem;line-height:1.8;color:#4a4540;font-weight:300;">Beyond PTSD, moral injury — the psychological damage caused by acting against one's values — is emerging as a key framework for understanding collective psychological wounds. A neuropsychological perspective.</p>
+        </div>
+
+      </div>
+
+    </div>
+
+    <div class="deco-line"></div>
+
+    <div style="background:var(--deep);padding:48px 40px;">
+      <div style="font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--gold);margin-bottom:1.2rem;">Editor's Note</div>
+      <p style="font-family:'Playfair Display',serif;font-style:italic;font-size:1.3rem;line-height:1.6;color:var(--paper);max-width:60ch;">"The most important neuropsychology research is the kind that refuses to stay in the lab. The mind does not exist in isolation — and neither should the science of it."</p>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-logo">Brain<span>lytic</span></div>
+    <div class="footer-mono">Recent · Current Issues · Society</div>
+  </footer>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     CONTACT PAGE
+════════════════════════════════════════════ -->
+<div id="page-contact" class="page">
+  <div class="inner-hero">
+    <div class="inner-eyebrow">Get in Touch</div>
+    <h1 class="inner-title">Find<br/><em>Brainlytic</em></h1>
+    <p class="inner-subtitle">Reach out, join the conversation, or follow along across platforms. Each space has its own purpose.</p>
+  </div>
+
+  <div class="page-body">
+    <div class="contact-wrap">
+
+      <div class="contact-left">
+        <div class="deco-line-accent"></div>
+        <h2 class="contact-intro-heading">The mind is<br/>better explored<br/><em>together.</em></h2>
+        <p class="contact-intro-body">Brainlytic is built on curiosity and openness. Whether you have a question, a disagreement, or a collaboration in mind — every thoughtful message is welcome. These platforms are each used differently: come to the right place for the right conversation.</p>
+        <br/><br/>
+        <div style="font-family:'DM Mono',monospace;font-size:0.62rem;letter-spacing:0.18em;text-transform:uppercase;color:var(--muted);margin-bottom:0.6rem;">Response Time</div>
+        <div style="font-family:'Playfair Display',serif;font-size:1rem;color:var(--ink);">Usually within 48–72 hours</div>
+      </div>
+
+      <div class="contact-right">
+
+        <a class="platform-card" href="#" onclick="return false;">
+          <div class="pc-icon">💬</div>
+          <div class="pc-info">
+            <div class="pc-platform">Discord</div>
+            <div class="pc-name">Community</div>
+            <div class="pc-desc">Join the discussion server — ask questions, debate ideas, and connect with others exploring neuropsychology.</div>
+          </div>
+          <div class="pc-arrow">→</div>
+        </a>
+
+        <a class="platform-card" href="#" onclick="return false;">
+          <div class="pc-icon">🎧</div>
+          <div class="pc-info">
+            <div class="pc-platform">Spotify</div>
+            <div class="pc-name">Audio Content</div>
+            <div class="pc-desc">Listen to spoken essays, reading playlists curated for study, and audio explorations of neuropsychology topics.</div>
+          </div>
+          <div class="pc-arrow">→</div>
+        </a>
+
+        <a class="platform-card" href="#" onclick="return false;">
+          <div class="pc-icon">📸</div>
+          <div class="pc-info">
+            <div class="pc-platform">Instagram</div>
+            <div class="pc-name">Visual Updates</div>
+            <div class="pc-desc">Illustrated concepts, quote graphics, behind-the-scenes of experiments, and short-form visual neuroscience.</div>
+          </div>
+          <div class="pc-arrow">→</div>
+        </a>
+
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-logo">Brain<span>lytic</span></div>
+    <div class="footer-mono">Contact · Platforms · Connect</div>
+  </footer>
+</div>
+
+
+<script>
+  /* ── PAGE ROUTING ── */
+  function showPage(id, linkEl) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+    const page = document.getElementById('page-' + id);
+    if (page) { page.classList.add('active'); window.scrollTo(0,0); }
+    if (linkEl) linkEl.classList.add('active');
+  }
+
+  document.querySelectorAll('.nav-links a').forEach(link => {
+    link.addEventListener('click', function(e) {
+      e.preventDefault();
+    });
+  });
+
+  /* ── CONCEPT FILTER ── */
+  function filterConcepts(theme, btn) {
+    document.querySelectorAll('.theme-tabs .theme-tab').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    document.querySelectorAll('.concept-card').forEach(card => {
+      card.style.display = (theme === 'all' || card.dataset.theme === theme) ? '' : 'none';
+    });
+  }
+
+  /* ── Q&A TOGGLE ── */
+  function toggleQA(item) {
+    item.classList.toggle('open');
+  }
+
+  /* ── Q&A FILTER ── */
+  function filterQA(topic, btn) {
+    document.querySelectorAll('.qa-filter .theme-tab').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    document.querySelectorAll('.qa-item').forEach(item => {
+      item.style.display = (topic === 'all' || item.dataset.topic === topic) ? '' : 'none';
+      item.classList.remove('open');
+    });
+  }
+
+  /* ── ESSAY FILTER ── */
+  function filterEssays(tag, btn) {
+    document.querySelectorAll('.theme-tabs .theme-tab').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    document.querySelectorAll('.essay-card').forEach(card => {
+      card.style.display = (tag === 'all' || card.dataset.tag === tag) ? '' : 'none';
+    });
+  }
+</script>
+
+</body>
+</html>
